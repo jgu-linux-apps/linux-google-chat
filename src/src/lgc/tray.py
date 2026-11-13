@@ -83,13 +83,22 @@ MENU_PATH = "/MenuBar"
 class Tray:
     """items: list of (id, label, callback) or (id, None, None) for a separator."""
 
+    @staticmethod
+    def _check(items):
+        """Bezpiecznik: id 0 to korzeń menu w DBusMenu – pozycja z id 0 tworzy pętlę, która potrafi zawiesić
+        powłokę GNOME (AppIndicator). Identyfikatory muszą być dodatnie i unikalne."""
+        ids = [it[0] for it in items]
+        if any(i <= 0 for i in ids) or len(set(ids)) != len(ids):
+            raise ValueError(f"tray: menu item ids must be unique and > 0, got {ids}")
+        return items
+
     def __init__(self, app_id, title, icon_name, on_activate, items):
         self.app_id = app_id
         self.title = title
         self.icon_name = icon_name
         self.tooltip = title
         self.on_activate = on_activate
-        self.items = items
+        self.items = self._check(items)
         self.revision = 1
         self.bus = None
         self.reg_ids = []
@@ -125,7 +134,7 @@ class Tray:
             self._emit(ITEM_PATH, "org.kde.StatusNotifierItem", "NewTitle", None)
 
     def set_items(self, items):
-        self.items = items
+        self.items = self._check(items)
         self.revision += 1
         self._emit(MENU_PATH, "com.canonical.dbusmenu", "LayoutUpdated", GLib.Variant("(ui)", (self.revision, 0)))
 

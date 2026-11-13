@@ -193,8 +193,10 @@ class ChatApp(Adw.Application):
     def _tray_items(self):
         show = _("Show Chat") + (f"  ({self.unread})" if self.unread else "")
         dnd = ("✓ " if self.dnd else "") + _("Do Not Disturb")
-        return [(1, show, self.show_window), (2, dnd, lambda: self.dnd_action.activate(None)), (0, None, None),
-                (3, _("Preferences"), self.show_prefs), (4, _("Quit"), self.quit)]
+        # identyfikatory muszą być > 0: 0 to w DBusMenu korzeń całego menu (separator z id 0 = menu zawierające
+        # samo siebie -> rozszerzenie AppIndicator w powłoce GNOME zapętlało się i zawieszało pulpit)
+        return [(1, show, self.show_window), (2, dnd, lambda: self.dnd_action.activate(None)), (3, None, None),
+                (4, _("Preferences"), self.show_prefs), (5, _("Quit"), self.quit)]
 
     def _make_tray(self):
         try:

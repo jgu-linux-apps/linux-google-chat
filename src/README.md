@@ -1,6 +1,6 @@
 # linux-google-chat — Linux Google Chat
 
-**Current version: 0.1.0 (2026-11-13)**
+**Current version: 0.1.1 (2026-11-13)**
 
 Google Chat in its own window on Ubuntu – a light, native GTK4/libadwaita app with the Google Chat web page inside
 (WebKitGTK). It stays signed in, lives in the tray, counts unread messages on the dock icon and shows GNOME
@@ -77,6 +77,7 @@ counter, autostart, light/dark icon service), `src/lgc/tray.py` (StatusNotifierI
 
 ## Version history
 
+- **0.1.1** (2026-11-13) – **critical fix:** a separator in the tray menu used item id 0, which in the DBusMenu protocol is the menu root. The AppIndicator extension then saw a menu containing itself and **froze GNOME Shell** seconds after the app started. Ids are now unique and positive, and the tray module refuses id 0. Do not use 0.1.0.
 - **0.1.0** (2026-11-13) – first version.
 
 ---

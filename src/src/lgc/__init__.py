@@ -1,5 +1,5 @@
 APP_ID = "io.github.jaro.LinuxGoogleChat"
 APP_NAME = "Linux Google Chat"
 PKG_NAME = "linux-google-chat"
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 WEBSITE = "https://github.com/jgu-linux-apps/linux-google-chat"
