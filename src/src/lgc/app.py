@@ -13,8 +13,8 @@ from .i18n import _, load_settings, save_settings  # noqa: E402
 from .themes import Themes  # noqa: E402
 
 CSS = """
-window.lgc-splash, window.lgc-splash > * { background: none; box-shadow: none; }
-.lgc-splash-card { border-radius: 18px; padding: 28px 30px; min-width: 520px; min-height: 200px; color: #ffffff;
+window.lgc-splash { background: none; box-shadow: none; }
+window.lgc-splash .lgc-splash-card { border-radius: 18px; padding: 28px 30px; min-width: 520px; min-height: 200px; color: #ffffff;
   background-color: #0c0e1a;
   background-image: radial-gradient(ellipse at 15% 0%, alpha(#22d3ee, 0.38), transparent 60%),
                     radial-gradient(ellipse at 100% 100%, alpha(#a855f7, 0.48), transparent 60%); }

@@ -125,6 +125,9 @@ class Themes:
             css = css_for(dark, self.extra.get(dark, ""))
         else:
             sm.set_color_scheme(Adw.ColorScheme.DEFAULT)
+            css = None
+        self._page_scheme(self.name == "pro" or sm.get_dark())
+        if css is None:
             return
         self.provider = Gtk.CssProvider()
         if hasattr(self.provider, "load_from_string"):
@@ -132,3 +135,11 @@ class Themes:
         else:
             self.provider.load_from_data(css, -1)
         Gtk.StyleContext.add_provider_for_display(display, self.provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 1)
+
+    @staticmethod
+    def _page_scheme(dark):
+        """Strona w WebKitGTK widzi prefers-color-scheme tylko z flagi GTK „wolę ciemny motyw” – libadwaita jej
+        nie ustawia, więc bez tego Google Chat był zawsze jasny. Zmieniamy tylko, gdy wartość się różni."""
+        st = Gtk.Settings.get_default()
+        if st is not None and st.get_property("gtk-application-prefer-dark-theme") != bool(dark):
+            st.set_property("gtk-application-prefer-dark-theme", bool(dark))
