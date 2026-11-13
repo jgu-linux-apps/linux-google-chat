@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=Linux Google Chat
+GenericName=Chat
+Comment=Desktop app for Google Chat on Ubuntu (unofficial)
+Comment[pl]=Aplikacja Google Chat na pulpit Ubuntu (nieoficjalna)
+Exec=linux-google-chat
+Icon=io.github.jaro.LinuxGoogleChat
+Terminal=false
+Categories=Network;InstantMessaging;Chat;
+Keywords=google;chat;messages;workspace;hangouts;
+StartupNotify=true
+StartupWMClass=io.github.jaro.LinuxGoogleChat
+SingleMainWindow=true
