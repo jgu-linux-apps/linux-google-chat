@@ -10,10 +10,11 @@ from gi.repository import Adw, Gdk, Gio, GLib, Gtk  # noqa: E402
 
 from . import APP_ID, APP_NAME, VERSION, WEBSITE, desktop, i18n, paths  # noqa: E402
 from .i18n import _, load_settings, save_settings  # noqa: E402
+from .notify import Notifier  # noqa: E402
 from .themes import Themes  # noqa: E402
 
 CSS = """
-window.lgc-splash { background: none; box-shadow: none; }
+window.lgc-splash { background: transparent; box-shadow: none; border-radius: 18px; outline: none; }
 window.lgc-splash .lgc-splash-card { border-radius: 18px; padding: 28px 30px; min-width: 520px; min-height: 200px; color: #ffffff;
   background-color: #0c0e1a;
   background-image: radial-gradient(ellipse at 15% 0%, alpha(#22d3ee, 0.38), transparent 60%),
@@ -35,7 +36,8 @@ class ChatApp(Adw.Application):
         self.splash = None
         self.tray = None
         self.badge = None
-        self.notes = {}                 # id powiadomienia GNOME -> WebKit.Notification (kliknięcie otwiera rozmowę)
+        self.notes = {}                 # tag powiadomienia -> WebKit.Notification (kliknięcie otwiera rozmowę)
+        self.notifier = Notifier(APP_NAME, APP_ID, APP_ID, self._on_notif_click)
         cfg = load_settings()
         self.dnd = bool(cfg["dnd"])
         self.unread = 0
@@ -47,7 +49,7 @@ class ChatApp(Adw.Application):
         prov = Gtk.CssProvider()
         prov.load_from_string(CSS) if hasattr(prov, "load_from_string") else prov.load_from_data(CSS, -1)
         Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), prov,
-                                                  Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+                                                  Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 2)  # nad motywem (APPLICATION + 1)
         Gtk.IconTheme.get_for_display(Gdk.Display.get_default()).add_search_path(paths.ICON_DIR)
         cfg = load_settings()
         self.look = Themes()
@@ -73,7 +75,6 @@ class ChatApp(Adw.Application):
         add("zoom-in", lambda *_: self.win and self.win.zoom(+1))
         add("zoom-out", lambda *_: self.win and self.win.zoom(-1))
         add("zoom-reset", lambda *_: self.win and self.win.zoom(0))
-        add("notif-open", self._on_notif_open, "s")
         for action, accels in (("app.quit", ["<Control>q"]), ("app.preferences", ["<Control>comma"]),
                                ("app.zoom-in", ["<Control>plus", "<Control>equal"]),
                                ("app.zoom-out", ["<Control>minus"]), ("app.zoom-reset", ["<Control>0"])):
@@ -102,6 +103,8 @@ class ChatApp(Adw.Application):
     # ================================================================ ekran startowy
     def _show_splash(self):
         w = Gtk.Window(decorated=False, resizable=False, application=self)
+        # bez klasy „background”: reguły motywu (window.background) malowałyby tło pod zaokrągloną kartą (białe rogi)
+        w.remove_css_class("background")
         w.add_css_class("lgc-splash")
         card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
         card.add_css_class("lgc-splash-card")
@@ -159,10 +162,13 @@ class ChatApp(Adw.Application):
             GLib.timeout_add(250, self._splash_done)
 
     # ================================================================ okno i zasobnik
-    def show_window(self):
+    def show_window(self, token=None):
         if self.win is None:
             self.activate()
             return
+        self.notifier.close("tray-hint")  # okno znów widoczne: podpowiedź o zasobniku jest już zbędna
+        if token:
+            self.win.set_startup_id(token)   # token z kliknięcia w powiadomienie: okno dostaje fokus pod Waylandem
         self.win.set_visible(True)
         self.win.present()
 
@@ -172,9 +178,9 @@ class ChatApp(Adw.Application):
             self.win.set_visible(False)
             if not self._tray_hint:
                 self._tray_hint = True
-                n = Gio.Notification.new(_("Linux Google Chat keeps running in the tray"))
-                n.set_body(_("Click the tray icon to open the window again."))
-                self.send_notification("tray-hint", n)
+                # przez notify.py jak wiadomości: kliknięcie otwiera okno i zamyka podpowiedź
+                self.notifier.show("tray-hint", _("Linux Google Chat keeps running in the tray"),
+                                   _("Click the tray icon to open the window again."))
             return True
         self.quit()
         return True
@@ -225,6 +231,8 @@ class ChatApp(Adw.Application):
             return
         self.unread = n
         self.badge.set(n)
+        if n == 0:
+            self._withdraw_all()          # wszystko przeczytane: powiadomienia znikają z GNOME
         if self.tray:
             self.tray.set_icon(desktop.tray_icon_name(self._dark(), n > 0))
             self.tray.set_tooltip(APP_NAME + (f" – {_('%d unread') % n}" if n else ""))
@@ -234,21 +242,28 @@ class ChatApp(Adw.Application):
     def web_notification(self, note):
         if self.dnd or not load_settings()["notifications"]:
             return
-        nid = f"chat-{note.get_id()}"
-        self.notes[nid] = note
+        tag = f"chat-{note.get_id()}"
+        self.notes[tag] = note
         if len(self.notes) > 50:
-            self.notes.pop(next(iter(self.notes)))
-        n = Gio.Notification.new(note.get_title() or "Chat")
-        n.set_body(note.get_body() or "")
-        n.set_icon(Gio.ThemedIcon.new(APP_ID))
-        n.set_default_action_and_target("app.notif-open", GLib.Variant("s", nid))
-        self.send_notification(nid, n)
+            self._withdraw(next(iter(self.notes)))
+        self.notifier.show(tag, note.get_title() or "Chat", note.get_body() or "")
+        # strona Chat sama zamyka powiadomienie, gdy wiadomość jest przeczytana – wtedy znika też z GNOME
+        note.connect("closed", lambda *_a, tag=tag: self._withdraw(tag))
 
-    def _on_notif_open(self, _a, v):
-        self.show_window()
-        note = self.notes.pop(v.get_string(), None)
+    def _withdraw(self, tag):
+        self.notes.pop(tag, None)
+        self.notifier.close(tag)
+
+    def _withdraw_all(self):
+        for tag in set(self.notes) | set(self.notifier.tags()):
+            self._withdraw(tag)
+
+    def _on_notif_click(self, tag, token):
+        self.show_window(token)
+        note = self.notes.pop(tag, None)
         if note is not None:
             note.clicked()                # strona Chat otwiera właściwą rozmowę
+        # notify.py zamyka samo powiadomienie w GNOME
 
     def _on_dnd(self, action, _v):
         self.dnd = not action.get_state().get_boolean()

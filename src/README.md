@@ -1,6 +1,6 @@
 # linux-google-chat — Linux Google Chat
 
-**Current version: 0.1.2 (2026-11-13)**
+**Current version: 0.1.5 (2026-11-14)**
 
 Google Chat in its own window on Ubuntu – a light, native GTK4/libadwaita app with the Google Chat web page inside
 (WebKitGTK). It stays signed in, lives in the tray, counts unread messages on the dock icon and shows GNOME
@@ -77,6 +77,7 @@ counter, autostart, light/dark icon service), `src/lgc/tray.py` (StatusNotifierI
 
 ## Version history
 
+- **0.1.5** (2026-11-14) – notifications disappear from GNOME after you click them, when you read the message in the app, and when nothing is unread any more (they now go straight through `org.freedesktop.Notifications`, so the app can close them itself); the same for the “keeps running in the tray” hint. The splash screen no longer shows light corners with the Aurora and Studio Pro themes.
 - **0.1.2** (2026-11-13) – the Chat page now turns dark with dark themes (Studio Pro, and System/Aurora when the system is dark): WebKitGTK reads the page colour scheme only from GTK's “prefer dark theme” flag, which libadwaita does not set; the splash screen is no longer transparent. Tip: in Google Chat settings set *Theme* to *System default* so the page follows the app.
 - **0.1.1** (2026-11-13) – **critical fix:** a separator in the tray menu used item id 0, which in the DBusMenu protocol is the menu root. The AppIndicator extension then saw a menu containing itself and **froze GNOME Shell** seconds after the app started. Ids are now unique and positive, and the tray module refuses id 0. Do not use 0.1.0.
 - **0.1.0** (2026-11-13) – first version.
