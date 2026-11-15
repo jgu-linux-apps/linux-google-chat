@@ -67,7 +67,7 @@ def system_dark():
 
 
 def tray_icon_name(dark, unread):
-    return "lgc-tray-%s%s" % ("dark" if dark else "light", "-unread" if unread else "")
+    return "lgc-tray2-%s%s" % ("dark" if dark else "light", "-unread" if unread else "")
 
 
 def _write_if_changed(path, data):

@@ -23,9 +23,9 @@ def light(dot=False):
 
 
 def dark(dot=False):
-    """Ciemny motyw systemu: granatowe tło z gradientową obwódką, dymki w gradiencie."""
+    """Ciemny motyw systemu: granatowe tło bez obwódki, dymki w gradiencie."""
     return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs>{GRAD}</defs>
-<rect x="2.5" y="2.5" width="59" height="59" rx="15" fill="#151827" stroke="url(#g)" stroke-width="2.5"/>
+<rect x="2.5" y="2.5" width="59" height="59" rx="15" fill="#151827"/>
 <path d="{BUBBLE}" fill="url(#g)"/>
 <path d="{BUBBLE2}" fill="none" stroke="#22d3ee" stroke-width="3.2" stroke-linejoin="round"/>
 <circle cx="20" cy="30" r="2.6" fill="#0c0e1a"/><circle cx="27" cy="30" r="2.6" fill="#0c0e1a"/>
@@ -39,8 +39,9 @@ DOT = '<circle cx="52" cy="12" r="10" fill="#22d3ee" stroke="#0c0e1a" stroke-wid
 def main(out):
     os.makedirs(out, exist_ok=True)
     files = {"app-light.svg": light(), "app-dark.svg": dark(),
-             "lgc-tray-light.svg": light(), "lgc-tray-light-unread.svg": light(True),
-             "lgc-tray-dark.svg": dark(), "lgc-tray-dark-unread.svg": dark(True)}
+             # "tray2": GNOME caches tray icons by name for the session, so a new look needs a new name
+             "lgc-tray2-light.svg": light(), "lgc-tray2-light-unread.svg": light(True),
+             "lgc-tray2-dark.svg": dark(), "lgc-tray2-dark-unread.svg": dark(True)}
     for name, svg in files.items():
         with open(os.path.join(out, name), "w", encoding="utf-8") as f:
             f.write(svg)
