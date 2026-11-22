@@ -1,6 +1,6 @@
 # linux-google-chat — Linux Google Chat
 
-**Current version: 0.1.8 (2026-11-18)**
+**Current version: 0.1.9 (2026-11-22)**
 
 Google Chat in its own window on Ubuntu – a light, native GTK4/libadwaita app with the Google Chat web page inside
 (WebKitGTK). It stays signed in, lives in the tray, counts unread messages on the dock icon and shows GNOME
@@ -77,6 +77,7 @@ counter, autostart, light/dark icon service), `src/lgc/tray.py` (StatusNotifierI
 
 ## Version history
 
+- **0.1.9** (2026-11-22) – notifications work again after a restart (Chat is allowed to notify from the start, WebKit forgot the permission between runs); Chat no longer shows up in GNOME's media player pill because of its notification sounds.
 - **0.1.8** (2026-11-18) – pasting and dropping images and files works: Ctrl+V with a screenshot or with files copied in Files (Nautilus), and files dragged from Files, now arrive in Chat as attachments instead of nothing or a `file://` path.
 - **0.1.7** (2026-11-15) – the dark tray icon has no gradient rim any more, like the app icon (new icon names, so GNOME shows the new look at once, without logging out).
 - **0.1.6** (2026-11-14) – the dark app icon has no gradient rim any more, the same as the other apps of the series (the tray icon keeps it, for contrast on the dark top bar).

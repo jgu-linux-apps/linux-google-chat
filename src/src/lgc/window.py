@@ -59,11 +59,19 @@ class ChatWindow(Adw.ApplicationWindow):
         ctx = WebKit.WebContext.get_default()
         ctx.set_spell_checking_languages(["pl_PL", "en_US"])
         ctx.set_spell_checking_enabled(bool(cfg["spellcheck"]))
+        # without this every page load starts with Notification.permission == "default" and Chat stays silent
+        ctx.initialize_notification_permissions(
+            [WebKit.SecurityOrigin.new_for_uri(u) for u in ("https://chat.google.com", "https://mail.google.com")], [])
 
         self.web = WebKit.WebView(network_session=session)
         st = self.web.get_settings()
         st.set_enable_developer_extras(bool(os.environ.get("LGC_DEVTOOLS")))
         st.set_enable_smooth_scrolling(True)
+        # Media Session puts Chat (its notification sounds) into GNOME's media player pill – we don't want that
+        feats = WebKit.Settings.get_all_features()
+        for i in range(feats.get_length()):
+            if feats.get(i).get_identifier() == "MediaSession":
+                st.set_feature_enabled(feats.get(i), False)
         ucm = self.web.get_user_content_manager()
         if os.environ.get("LGC_DEBUG"):
             st.set_enable_write_console_messages_to_stdout(True)
